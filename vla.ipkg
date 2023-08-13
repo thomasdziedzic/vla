@@ -16,7 +16,7 @@ authors = "Thomas Dziedzic"
 -- depends =
 
 -- modules to install
--- modules =
+modules = Lambda
 
 -- main file (i.e. file to load at REPL)
 main = Main
