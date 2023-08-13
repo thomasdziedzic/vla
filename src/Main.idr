@@ -2,44 +2,7 @@ module Main
 
 import Data.String
 
-data Term
-  = Var Nat
-  | Lam Term
-  | App Term Term
-
-Eq Term where
-  (Var n) == (Var n') = n == n'
-  (Lam t) == (Lam t') = t == t'
-  (App t1 t2) == (App t1' t2') = t1 == t1' && t2 == t2'
-  _ == _ = False
-
-substitute : Term -> Term -> Term
-substitute t1 t2 = substitute' 0 t1 t2
-  where
-  substitute' : Nat -> Term -> Term -> Term
-  substitute' n (Var n') t2 = if n == n' then t2 else (Var n')
-  substitute' n (Lam t1) t2 = Lam $ substitute' (S n) t1 t2
-  substitute' n (App tl tr) t2 = App (substitute' n tl t2) (substitute' n tr t2)
-
--- normalizing order, leftmost - outermost reduction
-step : Term -> (Bool, Term)
-step (Var n) = (False, Var n)
-step (Lam t) = let (substituted, t') = step t in (substituted, Lam t')
-step (App (Lam t1) t2) = (True, substitute t1 t2)
-step (App t1 t2) =
-  let (substituted, t1') = step t1 in
-  if substituted
-    then (True, App t1' t2)
-    else (
-      let (substituted', t2') = step t2 in
-      if substituted'
-        then (True, App t1 t2')
-        else (False, App t1 t2)
-    )
-
--- keep stepping until there are no more substitutions
-reduce : Term -> Term
-reduce t = let (substituted, t') = step t in if substituted then reduce t' else t
+import Lambda
 
 data Word
   = WReduce
@@ -96,11 +59,11 @@ stackOnto (x :: xs) onto = foldIntoWTerm (x :: onto) >>= (stackOnto xs)
 stackOnto _ onto = pure onto
 
 printStack : List Word -> IO ()
-printStack xs = putStrLn $ (addSpaceAterIfNotEmpty (joinBy " " (map show (reverse xs)))) ++ "<- Top"
+printStack xs = putStrLn $ (addSpaceAfterIfNotEmpty (joinBy " " (map show (reverse xs)))) ++ "<- Top"
   where
-  addSpaceAterIfNotEmpty : String -> String
-  addSpaceAterIfNotEmpty "" = ""
-  addSpaceAterIfNotEmpty s = s ++ " "
+  addSpaceAfterIfNotEmpty : String -> String
+  addSpaceAfterIfNotEmpty "" = ""
+  addSpaceAfterIfNotEmpty s = s ++ " "
 
 repl : List Word -> IO ()
 repl stack = do
